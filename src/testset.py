@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 from beartype import beartype
 from pandas.io.json._json import JsonReader
-from tqdm.auto import tqdm
+# from tqdm.auto import tqdm
 
 from src.labels import ground_truth
 
@@ -35,7 +35,7 @@ def create_kaggle_testset(sessions: pd.DataFrame, sessions_output: Path, labels_
     last_labels = []
     splitted_sessions = []
 
-    for _, session in tqdm(sessions.iterrows(), desc="Creating trimmed testset", total=len(sessions)):
+    for _, session in sessions.iterrows():
         session = session.to_dict()
         splitted_events, labels = split_events(session['events'])
         last_labels.append({'session': session['session'], 'labels': labels})
@@ -60,7 +60,7 @@ def trim_session(session: dict, max_ts: int) -> dict:
 def get_max_ts(sessions_file: Path) -> int:
     max_ts = float('-inf')
     with open(sessions_file) as f:
-        for line in tqdm(f, desc="Finding max timestamp"):
+        for line in f:
             session = json.loads(line)
             max_ts = max(max_ts, session['events'][-1]['ts'])
     return max_ts
@@ -74,7 +74,7 @@ def train_test_split(session_chunks: JsonReader, train_file: Path, test_file: Pa
     train_file = open(train_file, "w")
     Path(test_file).parent.mkdir(parents=True, exist_ok=True)
     test_file = open(test_file, "w")
-    for chunk in tqdm(session_chunks, desc="Splitting sessions"):
+    for chunk in session_chunks:
         for _, session in chunk.iterrows():
             session = session.to_dict()
             if session['events'][0]['ts'] > split_ts:
